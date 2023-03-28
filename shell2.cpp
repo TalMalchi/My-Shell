@@ -78,6 +78,7 @@ while (1)
         outfile = argv[i - 1];
         cout << "outfile: " << outfile << endl;
         
+        
         }
     else if (! strcmp(argv[i - 2], "2>")) {
         redirect_out = 0;
@@ -86,6 +87,10 @@ while (1)
         argv[i - 2] = NULL;
         error_file = argv[i - 1];
         cout << "error_file: " << error_file << endl;
+        cout << "redirect_err: " << redirect_err << endl;
+        
+        
+        
         }
     else if (! strcmp(argv[i - 2], ">>")) {
         redirect_out = 0;
@@ -93,19 +98,21 @@ while (1)
         redirect_err = 0;
         argv[i - 2] = NULL;
         outfile = argv[i - 1];
-        cout << "outfile: " << outfile << endl;
+        cout << "outfile append: " << outfile << endl;
+        
         }    
     
-    else 
+    else{
         redirect_out = 0;
         redirect_appened = 0;
         redirect_err = 0;
 
-    
+    }
 
     /* for commands not part of the shell command language */ 
 
     if (fork() == 0) { 
+        cout << "redirect inside fork: " << redirect_err << endl;
         /* redirect_oution of IO ? */
         if (redirect_out) {
             fd = creat(outfile, 0660); 
@@ -114,28 +121,41 @@ while (1)
             close(fd); 
             /* stdout is now redirect_outed */
         }
-        else if(redirect_appened){
-            fd = open(outfile, O_WRONLY | O_APPEND | O_CREAT);
+         if(redirect_appened){
+            fd = open(outfile, O_WRONLY | O_APPEND | O_CREAT, 0660);
             close (STDOUT_FILENO) ;
             dup(fd);
             close(fd);
         }
-        else if(redirect_err){
+         if(redirect_err){
+            cout << "im here erorrr" << endl;
             fd = creat(error_file, 0660);
             close(STDERR_FILENO) ;
             dup(fd);
             close(fd);
         } 
-        /* execute command */
-        cout << "execvp: " << argv[0] << endl;
-
-        execvp(argv[0], argv);
+        /* execute command */       
+            cout << "im here" << endl;
+            cout << "execvp: " << argv[0] << endl;
+            cout << "argv: " << argv << endl;
+            execvp(argv[0], argv);
+        
     }
     /* parent continues here */
-    if (amper == 0)
-        retid = wait(&status);
+    else{
+        if (amper == 0){
+            retid = wait(&status);
+            if (retid < 0) {
+                    perror("waitpid() failed");
+                }
+                else {
+                    last_cmd_status = WEXITSTATUS(status);
+                }
+            
+        }
+        
     
-    last_cmd_status= WEXITSTATUS(status);
-    
+
+    }
 }
 }
