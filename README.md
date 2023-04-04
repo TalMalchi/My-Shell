@@ -12,6 +12,7 @@ In the terminal type `make clean`, and then `make` , to run type `./myshell`
 3 : echo     
 4 : echo $?  
 5 : cd   
+6 : !! command   
 7 : quit    
 10 : Adding virables  
 11 : read   
@@ -19,7 +20,6 @@ In the terminal type `make clean`, and then `make` , to run type `./myshell`
 
 ***Need to do:***  
 ```
-6 : !! command   
 8 :  Control c -> print the message (You type control C), but doesnt print the prompt   
 9 : pipe     
 12 : arrow up & down ->  i start but it didnt work    
