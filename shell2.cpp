@@ -33,6 +33,7 @@ int main()
 {
     signal(SIGINT, handler);
     char command[1024];
+    char last_command[1024];
     string prompt = "hello";
     char *token;
     char *outfile, *error_file;
@@ -53,9 +54,27 @@ int main()
             redirect_appened = 0;
             redirect_out = 0;
             redirect_err = 0;
-            cout << "command: " << command << endl;
+            //cout << "command: " << command << endl;
             c = command[0];
 
+            /* !! command */
+            if(!strcmp(argv[0], "!!")){
+                // no previous command case
+                if(last_command[0] == '\0')
+                {
+                    continue;
+                }
+                else
+                {
+                    strcpy(command, last_command);
+                }
+            }
+            //copy the command to the last_command
+            else
+            {
+                strcpy(last_command, command);
+            }
+ 
             while (c == '\033')
             {
                 cout << ("\033[1A"); // line up
@@ -135,13 +154,6 @@ int main()
                 {
                     perror("cd");
                 }
-
-                continue;
-            }
-            /* !! command */
-            if (!strcmp(argv[0], "!!"))
-            {
-                //TODO
 
                 continue;
             }
@@ -301,6 +313,7 @@ int main()
                     }
                 }
             }
+
             /* parent continues here */
 
             if (amper == 0)
@@ -315,6 +328,7 @@ int main()
                     last_cmd_status = WEXITSTATUS(status);
                 }
             }
+              
         }
     }
     catch (exception &e)
