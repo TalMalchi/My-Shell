@@ -21,14 +21,12 @@
 #define MAXHISTORY 20
 
 using namespace std;
-
-void handler(int sig)
+ void handler(int sig)
 {
-    if (sig == SIGINT)
-    {
-        cout << "You typed Control-C!" << endl;
-    }
+    printf( "You typed Control-C!\n");
 }
+
+
 int main()
 {
     signal(SIGINT, handler);
@@ -37,12 +35,15 @@ int main()
     string prompt = "hello";
     char *token;
     char *outfile, *error_file;
-    int i, fd, amper, redirect_out, retid, status, redirect_appened, redirect_err, last_cmd_status;
+    int i, fd, amper, redirect_out, retid, status, redirect_appened, redirect_err, last_cmd_status, piping;
     char *argv[10];
-    char temp[1024];
+    int argc1;
     int c = 0;
+    int pipefd[2];
+    pid_t pid;
+    char ***argvs = (char ***)malloc(sizeof(char **) * 20), temp[1024];
     static map<string, string> variables;
-
+  
     try
     {
         while (1)
@@ -51,6 +52,7 @@ int main()
             cout << prompt << ": ";
             fgets(command, 1024, stdin);
             command[strlen(command) - 1] = '\0';
+            piping = 0;
             redirect_appened = 0;
             redirect_out = 0;
             redirect_err = 0;
@@ -59,6 +61,26 @@ int main()
 
             /* !! command */
 
+            if(!strcmp(argv[0], "!!")){
+                // no previous command case
+                if(last_command[0] == '\0')
+                {
+                   
+                    continue;
+                }
+                else
+                {
+                    memset(command, 0, sizeof(command));
+                    strcpy(command, last_command);
+                }
+            }
+            //copy the command to the last_command
+            else
+            { 
+                memset(last_command, 0, sizeof(last_command));
+                strcpy(last_command, command);
+            }
+ 
             while (c == '\033')
             {
                 cout << ("\033[1A"); // line up
@@ -80,6 +102,7 @@ int main()
                 fgets(tempCommand, 1024, stdin);
                 tempCommand[strlen(tempCommand) - 1] = '\0';
                 c = tempCommand[0];
+                // piping = 0;
                 strcat(command, tempCommand);
                 cout << "command: " << command << endl;
                 if (c != '\033')
@@ -145,8 +168,15 @@ int main()
                 argv[i] = token;
                 token = strtok(NULL, " ");
                 i++;
+                if (token && !strcmp(token, "|"))
+                {
+                    piping = 1;
+                    break;
+                }
             }
+            
             argv[i] = NULL;
+            argc1 = i;
 
             /* Is command empty */
             if (argv[0] == NULL)
@@ -286,13 +316,40 @@ int main()
             }
 
             if (!strcmp(argv[i - 2], ">"))
+            // /* pipe command */
+            if (piping)
             {
+                argvs[0] = argv;
+                int cur_pipe = 1;
+                int word_num = 0;
+                argvs[cur_pipe] = (char **)malloc(1024 * sizeof(char *));
+                token = strtok(NULL, " ");
+                while (token != NULL)
+                {
+                    if (!strcmp(token, "|"))
+                    {
+                        argvs[cur_pipe][word_num] = NULL;
+                        cur_pipe++;
+                        word_num = 0;
+                        argvs[cur_pipe] = (char **)malloc(1024 * sizeof(char *));
+                        token = strtok(NULL, " ");
+                    }
+                    argvs[cur_pipe][word_num] = token;
+                    token = strtok(NULL, " ");
+                    word_num++;
+                }
+                argvs[cur_pipe+1] = NULL;
+            }
+           
+
+            if (argc1 > 1 && ! strcmp(argv[argc1 - 2], ">")) {
                 redirect_out = 1;
                 redirect_appened = 0;
                 redirect_err = 0;
-                argv[i - 2] = NULL;
-                outfile = argv[i - 1];
-            }
+                argv[argc1 - 2] = NULL;
+                outfile = argv[argc1 - 1];
+                
+                }
             else if (!strcmp(argv[i - 2], "2>"))
             {
                 redirect_out = 0;
@@ -318,8 +375,8 @@ int main()
             }
 
             /* for commands not part of the shell command language */
-            if (strcmp(argv[0], "cd") != 0 && strcmp(argv[0], "echo") != 0 && strcmp(argv[0], "prompt") != 0)
-            {
+            // if (strcmp(argv[0], "cd") != 0 && strcmp(argv[0], "echo") != 0 && strcmp(argv[0], "prompt") != 0)
+            // {
                 if (fork() == 0)
                 {
                     /* redirect_oution of IO ? */
@@ -348,6 +405,34 @@ int main()
                     }
 
                     /* execute command */
+
+                    if (piping)
+                    {
+                        int curr_pipe = 0;
+                        while (*argvs)
+                        {
+                            pipe(pipefd);
+                            if (fork() == 0)
+                            {
+                                dup2(curr_pipe, 0);
+                                if (*(argvs + 1) != NULL)
+                                {
+                                    dup2(pipefd[1], 1);
+                                }
+                                close(pipefd[0]);
+                                execvp((*argvs)[0], *argvs);
+                                exit(0);
+                            }
+                            else
+                            {
+                                wait(NULL);
+                                close(pipefd[1]);
+                                curr_pipe = pipefd[0];
+                                argvs++;
+                            }
+                        }
+                        exit(0);
+                    }
                     else
                     {
                         execvp(argv[0], argv);
@@ -356,8 +441,8 @@ int main()
                         printf("Error executing command\n");
                         exit(EXIT_FAILURE);
                     }
+
                 }
-            }
 
             /* parent continues here */
 
