@@ -54,27 +54,11 @@ int main()
             redirect_appened = 0;
             redirect_out = 0;
             redirect_err = 0;
-            //cout << "command: " << command << endl;
+            // cout << "command: " << command << endl;
             c = command[0];
 
             /* !! command */
-            if(!strcmp(argv[0], "!!")){
-                // no previous command case
-                if(last_command[0] == '\0')
-                {
-                    continue;
-                }
-                else
-                {
-                    strcpy(command, last_command);
-                }
-            }
-            //copy the command to the last_command
-            else
-            {
-                strcpy(last_command, command);
-            }
- 
+
             while (c == '\033')
             {
                 cout << ("\033[1A"); // line up
@@ -106,6 +90,50 @@ int main()
                 {
                     cout << "command: inside else " << command << endl;
                     strcpy(command, tempCommand);
+                }
+            }
+
+            if (command[0] == 'i' && command[1] == 'f')
+            {
+                // take all the command ecxept the first argument
+                strcpy(command, command + 2);
+                string then;
+                getline(cin, then);
+                if (then == "then")
+                {
+                    string ThenCommand;
+                    getline(cin, ThenCommand);
+                    string NextCommand;
+                    getline(cin, NextCommand);
+                    if (NextCommand == "fi")
+                    {
+                        if (!system(command))
+                        {
+                            cout << "command: " << command << endl;
+                            cout << "ThenCommand: " << ThenCommand << endl;
+                            strcpy(command, ThenCommand.c_str());
+                        }
+                        continue;
+                    }
+                    else if (NextCommand == "else")
+                    {
+                        string elseCommand;
+                        getline(cin, elseCommand);
+                        string fi;
+                        getline(cin, fi);
+                        if (fi == "fi")
+                        {
+                            if (!system(command))
+                            {
+                                // cout << "command: inside fi " << endl;
+                                strcpy(command, ThenCommand.c_str());
+                            }
+                            else
+                            {
+                                strcpy(command, elseCommand.c_str());
+                            }
+                        }
+                    }
                 }
             }
 
@@ -178,7 +206,7 @@ int main()
             /* set variable command */
             if (argv[0][0] == '$' && !strcmp(argv[1], "="))
             {
-                
+
                 string s = argv[0] + 1;
                 variables[s] = argv[2];
                 continue;
@@ -194,7 +222,8 @@ int main()
                 }
 
                 // check if the command is echo $?
-                if (!strcmp(argv[1], "$?")){
+                if (!strcmp(argv[1], "$?"))
+                {
                     cout << last_cmd_status << endl;
                     continue;
                 }
@@ -220,6 +249,24 @@ int main()
                 continue;
             }
 
+            if (!strcmp(argv[0], "!!"))
+            {
+                // no previous command case
+                if (last_command[0] == '\0')
+                {
+                    continue;
+                }
+                else
+                {
+                    strcpy(command, last_command);
+                }
+            }
+            // copy the command to the last_command
+            else
+            {
+                strcpy(last_command, command);
+            }
+
             /* read command */
             if (!strcmp(argv[0], "read"))
             {
@@ -237,8 +284,6 @@ int main()
                 }
                 continue;
             }
-
-            
 
             if (!strcmp(argv[i - 2], ">"))
             {
@@ -328,7 +373,6 @@ int main()
                     last_cmd_status = WEXITSTATUS(status);
                 }
             }
-              
         }
     }
     catch (exception &e)
