@@ -2,14 +2,11 @@
 
 This project aims to implement a simple shell in C++ that can execute basic commands like :
 ```
-cd, echo, !!, $?, prompt, read, >>, 2>, >, if else, and piping.
+cd, echo, !!, $?, prompt, read, >>, 2>, >, if else, quit, adding variables with $, and piping.
 ```
 
 ### Getting Started
-To run this project, you'll need to have a C++ compiler installed on your machine. You can install one of the following:
-- GCC
-- Clang
-- Microsoft Visual C++
+To run this project, you'll need to have a C++ compiler installed on your machine. 
 
 ### How to Run? 
 
