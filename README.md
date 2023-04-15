@@ -51,29 +51,11 @@ You can add the else command.
 - ***$*** - add variables to the enviroment. The lines contains 3 part seperats with spaces, like this structure : $Key = value.  Example below : 
 > $person =  Roni   
 > echo person   
-> Roni     
+> Roni 
 
-<!--
-***Working:***
-```
-1 : > , >> , 2>   
-2 : prompt   
-3 : echo     
-4 : echo $?  
-5 : cd   
-6 : !! command   
-7 : quit    
-10 : Adding virables  
-11 : read   
-```
+- ***control-C*** - the program will print to the terminal "You typed Control-C!" but the process will not stop, after printing there will be a line drop where you can enter the next command(you won't see the prompt). Example below :
+> hello: ^CYou typed Control-C!
+> echo hii
+> hii 
 
-***Need to do:***  
-```
-8 :  Control c -> print the message (You type control C), but doesnt print the prompt   
-9 : pipe     
-12 : arrow up & down ->  i start but it didnt work    
-13 : IF/ELSE     
-```
-
--->
-
+- ***up and down arrows*** - by pressing the up or down arrow in your keyboard it will show you your last 20 commands by order. after pressing any of the arrows you will need to press "enter" in order to see the command.
