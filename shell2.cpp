@@ -30,13 +30,14 @@ int main()
 {
     signal(SIGINT, handler);
     char command[1024];
+    char temp_command[1024];
     char last_command[1024];
     string command_list[MAXHISTORY];
 
     string prompt = "hello";
     char *token;
     char *outfile, *error_file;
-    int i, fd, amper, redirect_out, retid, status, redirect_appened, redirect_err, last_cmd_status, piping, rollingIndex = 0;
+    int i, fd, amper, redirect_out, retid, status, redirect_appened, redirect_err, last_cmd_status, piping, commandIndex = 0;
     char *argv[10];
     int argc1;
     int c = 0;
@@ -52,134 +53,13 @@ int main()
             cout << prompt << ": ";
             fgets(command, 1024, stdin);
             command[strlen(command) - 1] = '\0';
+            // copy command into temp_command
+            strcpy(temp_command, command);
             piping = 0;
             redirect_appened = 0;
             redirect_out = 0;
             redirect_err = 0;
             c = command[0];
-
-            /* !! command */
-            if (!strcmp(argv[0], "!!"))
-            {
-                // no previous command case
-                if (last_command[0] == '\0')
-                {
-
-                    continue;
-                }
-                else
-                {
-                    memset(command, 0, sizeof(command));
-                    strcpy(command, last_command);
-                    //strcpy(command, command_list[(rollingIndex-1) % MAXHISTORY].c_str());
-                }
-            }
-            // copy the command to the last_command
-            else
-            {
-                memset(last_command, 0, sizeof(last_command));
-                strcpy(last_command, command);
-            }
-
-            /* Arrow up/down command */
-            while (c == '\033')
-            {
-                cout << ("\033[1A"); // line up
-                cout << ("\x1b[2K"); // delete line
-                switch (command[2])
-                { 
-                case 'A':
-                    // code for arrow up    
-                    memset(command, 0, sizeof(command));
-                    rollingIndex--;
-                    rollingIndex = rollingIndex % MAXHISTORY;
-                    strcpy(command, command_list[rollingIndex].c_str());
-                    cout << prompt << ": " << command << endl;
-                    break;
-
-                case 'B':
-                    // code for arrow down
-                    memset(command, 0, sizeof(command));
-                    rollingIndex++;
-                    rollingIndex = rollingIndex % MAXHISTORY;
-                    strcpy(command, command_list[rollingIndex].c_str());
-                    cout << prompt << ": " << command << endl;
-                    break;
-                }
-                char tempCommand[1024];
-                fgets(tempCommand, 1024, stdin);
-                tempCommand[strlen(tempCommand) - 1] = '\0';
-                c = tempCommand[0];
-                piping = 0;
-                strcat(command, tempCommand);
-                                if (c != '\033')
-                {
-                    break;
-                }
-                else
-                {
-                    strcpy(command, tempCommand);
-                }
-            }
-
-            /* IF/ELSE command */
-            if (command[0] == 'i' && command[1] == 'f')
-            {
-                // take all the command ecxept the first argument
-                strcpy(command, command + 2);
-                string then;
-                getline(cin, then);
-                if (then == "then")
-                {
-                    string ThenCommand;
-                    getline(cin, ThenCommand);
-                    string NextCommand;
-                    getline(cin, NextCommand);
-                    if (NextCommand == "fi")
-                    {
-                        if (!system(command))
-                        {
-                            // check if if statement is true, and execute the command
-                            strcpy(command, ThenCommand.c_str());
-                        }
-                        else
-                        {
-                            strcpy(command, " ");
-                            continue;
-                        }
-                    }
-                    // check if there is an else statement
-                    else if (NextCommand == "else")
-                    {
-                        string elseCommand;
-                        getline(cin, elseCommand);
-                        string fi;
-                        getline(cin, fi);
-                        if (fi == "fi")
-                        {   
-                            // check if if statement is true, and execute the command
-                            if (!system(command))
-                            {
-                                // cout << "command: inside fi " << endl;
-                                strcpy(command, ThenCommand.c_str());
-                            }
-                            else
-                            {
-                                // check if if statement is false, and execute the command
-                                strcpy(command, elseCommand.c_str());
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    cout << "syntax error" << endl;
-                    continue;
-                }
-            }
-            command_list[rollingIndex] = command;
-            rollingIndex++;
-            rollingIndex = rollingIndex % MAXHISTORY;
 
             /* parse command line */
             i = 0;
@@ -198,6 +78,151 @@ int main()
 
             argv[i] = NULL;
             argc1 = i;
+            
+
+            /* Arrow up/down command */
+            while (c == '\033')
+            {
+                cout << ("\033[1A"); // line up
+                cout << ("\x1b[2K"); // delete line
+                switch (command[2])
+                {
+                case 'A':
+                    // code for arrow up
+                    memset(command, 0, sizeof(command));
+                    commandIndex--;
+                    commandIndex = commandIndex % MAXHISTORY;
+                    strcpy(command, command_list[commandIndex].c_str());
+                    cout << prompt << ": " << command << endl;
+                    break;
+
+                case 'B':
+                    // code for arrow down
+                    memset(command, 0, sizeof(command));
+                    commandIndex++;
+                    commandIndex = commandIndex % MAXHISTORY;
+                    strcpy(command, command_list[commandIndex].c_str());
+                    cout << prompt << ": " << command << endl;
+                    break;
+                }
+                char tempCommand[1024];
+                fgets(tempCommand, 1024, stdin);
+                tempCommand[strlen(tempCommand) - 1] = '\0';
+                c = tempCommand[0];
+                piping = 0;
+                strcat(command, tempCommand);
+                if (c != '\033')
+                {
+                    break;
+                }
+                else
+                {
+                    strcpy(command, tempCommand);
+                }
+            }
+            /* !! command */
+            if (!strcmp(argv[0], "!!"))
+            {
+                // no previous command case
+                if (last_command[0] == '\0')
+                {
+
+                    continue;
+                }
+                else
+                {
+                    memset(command, 0, sizeof(command));
+                    strcpy(command, last_command);
+                    // strcpy(command, command_list[(rollingIndex-1) % MAXHISTORY].c_str());
+                }
+            }
+            // copy the command to the last_command
+            else
+            {
+                memset(last_command, 0, sizeof(last_command));
+                strcpy(last_command, command);
+            }
+
+            /* IF/ELSE command */
+            if (command[0] == 'i' && command[1] == 'f')
+            {
+
+                // take all the command ecxept the first argument
+                strcpy(command, temp_command + 2);
+                string then;
+                getline(cin, then);
+                if (then == "then")
+                {
+
+                    string ThenCommand;
+                    getline(cin, ThenCommand);
+                    string NextCommand;
+                    getline(cin, NextCommand);
+                    if (NextCommand == "fi")
+                    {
+                        if (!system(command))
+                        {
+                            // check if if statement is true, and execute the command
+                            strcpy(command, " ");
+                            system(ThenCommand.c_str());
+                        }
+                        else
+                        {
+                            strcpy(command, " ");
+                            continue;
+                        }
+                    }
+                    // check if there is an else statement
+                    else if (NextCommand == "else")
+                    {
+                        string elseCommand;
+                        getline(cin, elseCommand);
+                        string fi;
+                        getline(cin, fi);
+                        if (fi == "fi")
+                        {
+                            // check if if statement is true, and execute the command
+                            if (!system(command))
+                            {
+                                strcpy(command, " ");
+                                system(ThenCommand.c_str());
+                            }
+                            else
+                            {
+                                // check if if statement is false, and execute the command
+                                strcpy(command, " ");
+                                system(elseCommand.c_str());
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    cout << "syntax error" << endl;
+                    continue;
+                }
+            }
+            command_list[commandIndex] = command;
+            commandIndex++;
+            commandIndex = commandIndex % MAXHISTORY;
+
+            // /* parse command line */
+            // i = 0;
+            // token = strtok(command, " ");
+            // while (token != NULL)
+            // {
+            //     argv[i] = token;
+            //     token = strtok(NULL, " ");
+            //     i++;
+            //     if (token && !strcmp(token, "|"))
+            //     {
+            //         piping = 1;
+            //         break;
+            //     }
+            // }
+
+            // argv[i] = NULL;
+            // argc1 = i;
 
             /* Is command empty */
             if (argv[0] == NULL)
@@ -240,7 +265,6 @@ int main()
             /* prompt command */
             if (!strcmp(argv[0], "prompt"))
             {
-                //cout << "prompt: " << argv[1] << endl;
                 if (i > 1 && !strcmp(argv[1], "="))
                 {
                     if (argv[2] == NULL)
@@ -266,6 +290,7 @@ int main()
             /* echo command */
             if (!strcmp(argv[0], "echo"))
             {
+
                 // check if the argument is empty
                 if (argv[1] == NULL)
                 {
@@ -282,7 +307,7 @@ int main()
                 {
                     // check if the argument is a variable
                     if (argv[j][0] == '$')
-                    {   
+                    {
                         // get the variable name from the map and print it out
                         char *var = argv[j] + 1;
                         if (variables.find(var) != variables.end())
@@ -336,31 +361,30 @@ int main()
                 continue;
             }
 
-            
-                // /* pipe command */
-                if (piping)
+            // /* pipe command */
+            if (piping)
+            {
+                argvs[0] = argv;
+                int cur_pipe = 1;
+                int word_num = 0;
+                argvs[cur_pipe] = (char **)malloc(1024 * sizeof(char *));
+                token = strtok(NULL, " ");
+                while (token != NULL)
                 {
-                    argvs[0] = argv;
-                    int cur_pipe = 1;
-                    int word_num = 0;
-                    argvs[cur_pipe] = (char **)malloc(1024 * sizeof(char *));
-                    token = strtok(NULL, " ");
-                    while (token != NULL)
+                    if (!strcmp(token, "|"))
                     {
-                        if (!strcmp(token, "|"))
-                        {
-                            argvs[cur_pipe][word_num] = NULL;
-                            cur_pipe++;
-                            word_num = 0;
-                            argvs[cur_pipe] = (char **)malloc(1024 * sizeof(char *));
-                            token = strtok(NULL, " ");
-                        }
-                        argvs[cur_pipe][word_num] = token;
+                        argvs[cur_pipe][word_num] = NULL;
+                        cur_pipe++;
+                        word_num = 0;
+                        argvs[cur_pipe] = (char **)malloc(1024 * sizeof(char *));
                         token = strtok(NULL, " ");
-                        word_num++;
                     }
-                    argvs[cur_pipe + 1] = NULL;
+                    argvs[cur_pipe][word_num] = token;
+                    token = strtok(NULL, " ");
+                    word_num++;
                 }
+                argvs[cur_pipe + 1] = NULL;
+            }
 
             if (argc1 > 1 && !strcmp(argv[argc1 - 2], ">"))
             {
@@ -386,7 +410,6 @@ int main()
                 argv[i - 2] = NULL;
                 outfile = argv[i - 1];
             }
-            
 
             else
             {
@@ -396,7 +419,7 @@ int main()
             }
 
             /* for commands not part of the shell command language */
-            
+
             if (fork() == 0)
             {
                 /* redirect_oution of IO ? */
