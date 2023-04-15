@@ -42,6 +42,8 @@ Neta
 Chen
 Control-D
 hello: cat names.txt
+hello: cat names.txt | cat | cat | cat
+hello: date | grep Sat
 hello: quit
 
 
