@@ -56,6 +56,6 @@ You can add the else command.
 - ***control-C*** - the program will print to the terminal "You typed Control-C!" but the process will not stop, after printing there will be a line drop where you can enter the next command(you won't see the prompt). Example below :
 > hello: ^CYou typed Control-C!
 > echo hii
-> hii 
+> hii
 
 - ***up and down arrows*** - by pressing the up or down arrow in your keyboard it will show you your last 20 commands by order. after pressing any of the arrows you will need to press "enter" in order to see the command.
