@@ -78,26 +78,8 @@ int main()
 
             argv[i] = NULL;
             argc1 = i;
+            cout << "command: " << command << endl;
            
-
-            /* parse command line */
-            i = 0;
-            token = strtok(command, " ");
-            while (token != NULL)
-            {
-                argv[i] = token;
-                token = strtok(NULL, " ");
-                i++;
-                if (token && !strcmp(token, "|"))
-                {
-                    piping = 1;
-                    break;
-                }
-            }
-
-            argv[i] = NULL;
-            argc1 = i;
-            
 
             /* Arrow up/down command */
             while (c == '\033')
