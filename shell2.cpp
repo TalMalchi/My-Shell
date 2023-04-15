@@ -36,7 +36,7 @@ int main()
     string prompt = "hello";
     char *token;
     char *outfile, *error_file;
-    int i, fd, amper, redirect_out, retid, status, redirect_appened, redirect_err, last_cmd_status, piping, rollingIndex = 0;
+    int i, fd, amper, redirect_out, retid, status, redirect_appened, redirect_err, last_cmd_status, piping, commandIndex = 0;
     char *argv[10];
     int argc1;
     int c = 0;
@@ -91,18 +91,18 @@ int main()
                 case 'A':
                     // code for arrow up    
                     memset(command, 0, sizeof(command));
-                    rollingIndex--;
-                    rollingIndex = rollingIndex % MAXHISTORY;
-                    strcpy(command, command_list[rollingIndex].c_str());
+                    commandIndex--;
+                    commandIndex = commandIndex % MAXHISTORY;
+                    strcpy(command, command_list[commandIndex].c_str());
                     cout << prompt << ": " << command << endl;
                     break;
 
                 case 'B':
                     // code for arrow down
                     memset(command, 0, sizeof(command));
-                    rollingIndex++;
-                    rollingIndex = rollingIndex % MAXHISTORY;
-                    strcpy(command, command_list[rollingIndex].c_str());
+                    commandIndex++;
+                    commandIndex = commandIndex % MAXHISTORY;
+                    strcpy(command, command_list[commandIndex].c_str());
                     cout << prompt << ": " << command << endl;
                     break;
                 }
@@ -177,9 +177,9 @@ int main()
                     continue;
                 }
             }
-            command_list[rollingIndex] = command;
-            rollingIndex++;
-            rollingIndex = rollingIndex % MAXHISTORY;
+            command_list[commandIndex] = command;
+            commandIndex++;
+            commandIndex = commandIndex % MAXHISTORY;
 
             /* parse command line */
             i = 0;
@@ -240,7 +240,7 @@ int main()
             /* prompt command */
             if (!strcmp(argv[0], "prompt"))
             {
-                cout << "prompt: " << argv[1] << endl;
+                //cout << "prompt: " << argv[1] << endl;
                 if (i > 1 && !strcmp(argv[1], "="))
                 {
                     if (argv[2] == NULL)
@@ -370,21 +370,23 @@ int main()
                 argv[argc1 - 2] = NULL;
                 outfile = argv[argc1 - 1];
             }
-            else if (!strcmp(argv[i - 2], "2>"))
+            else if (argc1 > 1 && !strcmp(argv[i - 2], "2>"))
             {
                 redirect_out = 0;
                 redirect_appened = 0;
                 redirect_err = 1;
-                argv[i - 2] = NULL;
-                error_file = argv[i - 1];
+                argv[argc1 - 2] = NULL;
+                error_file = argv[argc1 - 1];
+
             }
-            else if (!strcmp(argv[i - 2], ">>"))
+            else if (argc1 > 1 && !strcmp(argv[i - 2], ">>"))
             {
                 redirect_out = 0;
                 redirect_appened = 1;
                 redirect_err = 0;
                 argv[i - 2] = NULL;
-                outfile = argv[i - 1];
+                outfile = argv[argc1 - 1];
+
             }
 
             else

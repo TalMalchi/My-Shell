@@ -1,0 +1,48 @@
+hello: date >> myfile
+hello: cat myfile
+hello: date –u >> myfile
+hello: cat myfile
+hello: wc –l < myfile
+hello: prompt = hi
+hi: mkdir mydir
+hi: cd mydir
+hi: pwd
+hi: touch file1 file2 file3
+hi: ls
+hi: !!
+hi: echo abc xyz
+hi: ls
+hi: echo $?
+hi: ls no_such_file
+hi: echo $?
+hi: ls no_such_file 2> file
+hi: Control-C
+hi: if date | grep Fri
+then
+echo "Shabat Shalom"
+else
+  echo "Hard way to go"
+fi
+hi: prompt = hello
+hello: $person = Tal
+hello: echo person is $person
+hello: read name
+Roni
+hello: echo name is $name
+hello: !!
+hello: cd ..
+hello: echo $?
+hello: ls -l > file
+hello: cat > names.txt
+Roni
+Tal
+Amit
+Batel
+Neta
+Chen
+Control-D
+hello: cat names.txt
+hello: quit
+
+
+
