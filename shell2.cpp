@@ -60,6 +60,25 @@ int main()
             redirect_out = 0;
             redirect_err = 0;
             c = command[0];
+            
+             /* parse command line */
+            i = 0;
+            token = strtok(command, " ");
+            while (token != NULL)
+            {
+                argv[i] = token;
+                token = strtok(NULL, " ");
+                i++;
+                if (token && !strcmp(token, "|"))
+                {
+                    piping = 1;
+                    break;
+                }
+            }
+
+            argv[i] = NULL;
+            argc1 = i;
+           
 
             /* parse command line */
             i = 0;
@@ -290,7 +309,6 @@ int main()
             /* echo command */
             if (!strcmp(argv[0], "echo"))
             {
-
                 // check if the argument is empty
                 if (argv[1] == NULL)
                 {
