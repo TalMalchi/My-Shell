@@ -59,7 +59,6 @@ int main()
             c = command[0];
 
             /* !! command */
-
             if (!strcmp(argv[0], "!!"))
             {
                 // no previous command case
@@ -82,13 +81,15 @@ int main()
                 strcpy(last_command, command);
             }
 
+            /* Arrow up/down command */
             while (c == '\033')
             {
                 cout << ("\033[1A"); // line up
                 cout << ("\x1b[2K"); // delete line
                 switch (command[2])
-                { // the real value
+                { 
                 case 'A':
+                    // code for arrow up    
                     memset(command, 0, sizeof(command));
                     rollingIndex--;
                     rollingIndex = rollingIndex % MAXHISTORY;
@@ -121,6 +122,7 @@ int main()
                 }
             }
 
+            /* IF/ELSE command */
             if (command[0] == 'i' && command[1] == 'f')
             {
                 // take all the command ecxept the first argument
@@ -137,8 +139,7 @@ int main()
                     {
                         if (!system(command))
                         {
-                            // cout << "command: " << command << endl;
-                            // cout << "ThenCommand: " << ThenCommand << endl;
+                            // check if if statement is true, and execute the command
                             strcpy(command, ThenCommand.c_str());
                         }
                         else
@@ -147,6 +148,7 @@ int main()
                             continue;
                         }
                     }
+                    // check if there is an else statement
                     else if (NextCommand == "else")
                     {
                         string elseCommand;
@@ -154,7 +156,8 @@ int main()
                         string fi;
                         getline(cin, fi);
                         if (fi == "fi")
-                        {
+                        {   
+                            // check if if statement is true, and execute the command
                             if (!system(command))
                             {
                                 // cout << "command: inside fi " << endl;
@@ -162,6 +165,7 @@ int main()
                             }
                             else
                             {
+                                // check if if statement is false, and execute the command
                                 strcpy(command, elseCommand.c_str());
                             }
                         }
@@ -173,9 +177,7 @@ int main()
                     continue;
                 }
             }
-            //strcpy(command_list[rollingIndex].c_str(), command);
             command_list[rollingIndex] = command;
-
             rollingIndex++;
             rollingIndex = rollingIndex % MAXHISTORY;
 
@@ -257,7 +259,7 @@ int main()
             {
 
                 string s = argv[0] + 1;
-                variables[s] = argv[2];
+                variables[s] = argv[2]; // set the variable in the map
                 continue;
             }
 
@@ -269,8 +271,7 @@ int main()
                 {
                     cout << "echo: expected argument to \"echo\"\n";
                 }
-
-                // check if the command is echo $?
+                /* echo $? command */
                 if (!strcmp(argv[1], "$?"))
                 {
                     cout << last_cmd_status << endl;
@@ -281,7 +282,8 @@ int main()
                 {
                     // check if the argument is a variable
                     if (argv[j][0] == '$')
-                    {
+                    {   
+                        // get the variable name from the map and print it out
                         char *var = argv[j] + 1;
                         if (variables.find(var) != variables.end())
                         {
@@ -328,7 +330,7 @@ int main()
                 {
                     string s;
                     cin >> s;
-                    variables[argv[1]] = s;
+                    variables[argv[1]] = s; // set the variable in the map
                     cin.ignore();
                 }
                 continue;
