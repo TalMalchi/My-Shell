@@ -21,21 +21,22 @@
 #define MAXHISTORY 20
 
 using namespace std;
- void handler(int sig)
+void handler(int sig)
 {
-    printf( "You typed Control-C!\n");
+    printf("You typed Control-C!\n");
 }
-
 
 int main()
 {
     signal(SIGINT, handler);
     char command[1024];
     char last_command[1024];
+    string command_list[MAXHISTORY];
+
     string prompt = "hello";
     char *token;
     char *outfile, *error_file;
-    int i, fd, amper, redirect_out, retid, status, redirect_appened, redirect_err, last_cmd_status, piping;
+    int i, fd, amper, redirect_out, retid, status, redirect_appened, redirect_err, last_cmd_status, piping, rollingIndex = 0;
     char *argv[10];
     int argc1;
     int c = 0;
@@ -43,12 +44,11 @@ int main()
     pid_t pid;
     char ***argvs = (char ***)malloc(sizeof(char **) * 20), temp[1024];
     static map<string, string> variables;
-  
+
     try
     {
         while (1)
         {
-            // string line;
             cout << prompt << ": ";
             fgets(command, 1024, stdin);
             command[strlen(command) - 1] = '\0';
@@ -56,62 +56,67 @@ int main()
             redirect_appened = 0;
             redirect_out = 0;
             redirect_err = 0;
-            // cout << "command: " << command << endl;
             c = command[0];
 
             /* !! command */
 
-            if(!strcmp(argv[0], "!!")){
+            if (!strcmp(argv[0], "!!"))
+            {
                 // no previous command case
-                if(last_command[0] == '\0')
+                if (last_command[0] == '\0')
                 {
-                   
+
                     continue;
                 }
                 else
                 {
                     memset(command, 0, sizeof(command));
                     strcpy(command, last_command);
+                    //strcpy(command, command_list[(rollingIndex-1) % MAXHISTORY].c_str());
                 }
             }
-            //copy the command to the last_command
+            // copy the command to the last_command
             else
-            { 
+            {
                 memset(last_command, 0, sizeof(last_command));
                 strcpy(last_command, command);
             }
- 
+
             while (c == '\033')
             {
                 cout << ("\033[1A"); // line up
                 cout << ("\x1b[2K"); // delete line
-                printf("got an arrow ");
                 switch (command[2])
                 { // the real value
                 case 'A':
-                    // code for arrow up
-                    cout << ("up");
+                    memset(command, 0, sizeof(command));
+                    rollingIndex--;
+                    rollingIndex = rollingIndex % MAXHISTORY;
+                    strcpy(command, command_list[rollingIndex].c_str());
+                    cout << prompt << ": " << command << endl;
                     break;
 
                 case 'B':
                     // code for arrow down
-                    cout << ("down");
+                    memset(command, 0, sizeof(command));
+                    rollingIndex++;
+                    rollingIndex = rollingIndex % MAXHISTORY;
+                    strcpy(command, command_list[rollingIndex].c_str());
+                    cout << prompt << ": " << command << endl;
                     break;
                 }
                 char tempCommand[1024];
                 fgets(tempCommand, 1024, stdin);
                 tempCommand[strlen(tempCommand) - 1] = '\0';
                 c = tempCommand[0];
-                // piping = 0;
+                piping = 0;
                 strcat(command, tempCommand);
-                cout << "command: " << command << endl;
-                if (c != '\033')
+                                if (c != '\033')
                 {
                     break;
                 }
                 else
                 {
-                    cout << "command: inside else " << command << endl;
                     strcpy(command, tempCommand);
                 }
             }
@@ -132,11 +137,15 @@ int main()
                     {
                         if (!system(command))
                         {
-                            cout << "command: " << command << endl;
-                            cout << "ThenCommand: " << ThenCommand << endl;
+                            // cout << "command: " << command << endl;
+                            // cout << "ThenCommand: " << ThenCommand << endl;
                             strcpy(command, ThenCommand.c_str());
                         }
-                        continue;
+                        else
+                        {
+                            strcpy(command, " ");
+                            continue;
+                        }
                     }
                     else if (NextCommand == "else")
                     {
@@ -158,7 +167,17 @@ int main()
                         }
                     }
                 }
+                else
+                {
+                    cout << "syntax error" << endl;
+                    continue;
+                }
             }
+            //strcpy(command_list[rollingIndex].c_str(), command);
+            command_list[rollingIndex] = command;
+
+            rollingIndex++;
+            rollingIndex = rollingIndex % MAXHISTORY;
 
             /* parse command line */
             i = 0;
@@ -174,7 +193,7 @@ int main()
                     break;
                 }
             }
-            
+
             argv[i] = NULL;
             argc1 = i;
 
@@ -316,40 +335,39 @@ int main()
             }
 
             if (!strcmp(argv[i - 2], ">"))
-            // /* pipe command */
-            if (piping)
-            {
-                argvs[0] = argv;
-                int cur_pipe = 1;
-                int word_num = 0;
-                argvs[cur_pipe] = (char **)malloc(1024 * sizeof(char *));
-                token = strtok(NULL, " ");
-                while (token != NULL)
+                // /* pipe command */
+                if (piping)
                 {
-                    if (!strcmp(token, "|"))
-                    {
-                        argvs[cur_pipe][word_num] = NULL;
-                        cur_pipe++;
-                        word_num = 0;
-                        argvs[cur_pipe] = (char **)malloc(1024 * sizeof(char *));
-                        token = strtok(NULL, " ");
-                    }
-                    argvs[cur_pipe][word_num] = token;
+                    argvs[0] = argv;
+                    int cur_pipe = 1;
+                    int word_num = 0;
+                    argvs[cur_pipe] = (char **)malloc(1024 * sizeof(char *));
                     token = strtok(NULL, " ");
-                    word_num++;
+                    while (token != NULL)
+                    {
+                        if (!strcmp(token, "|"))
+                        {
+                            argvs[cur_pipe][word_num] = NULL;
+                            cur_pipe++;
+                            word_num = 0;
+                            argvs[cur_pipe] = (char **)malloc(1024 * sizeof(char *));
+                            token = strtok(NULL, " ");
+                        }
+                        argvs[cur_pipe][word_num] = token;
+                        token = strtok(NULL, " ");
+                        word_num++;
+                    }
+                    argvs[cur_pipe + 1] = NULL;
                 }
-                argvs[cur_pipe+1] = NULL;
-            }
-           
 
-            if (argc1 > 1 && ! strcmp(argv[argc1 - 2], ">")) {
+            if (argc1 > 1 && !strcmp(argv[argc1 - 2], ">"))
+            {
                 redirect_out = 1;
                 redirect_appened = 0;
                 redirect_err = 0;
                 argv[argc1 - 2] = NULL;
                 outfile = argv[argc1 - 1];
-                
-                }
+            }
             else if (!strcmp(argv[i - 2], "2>"))
             {
                 redirect_out = 0;
@@ -375,74 +393,72 @@ int main()
             }
 
             /* for commands not part of the shell command language */
-            // if (strcmp(argv[0], "cd") != 0 && strcmp(argv[0], "echo") != 0 && strcmp(argv[0], "prompt") != 0)
-            // {
-                if (fork() == 0)
+            
+            if (fork() == 0)
+            {
+                /* redirect_oution of IO ? */
+                if (redirect_out)
                 {
-                    /* redirect_oution of IO ? */
-                    if (redirect_out)
-                    {
-                        fd = creat(outfile, 0660);
-                        close(STDOUT_FILENO);
-                        dup(fd);
-                        close(fd);
-                        /* stdout is now redirect_outed */
-                    }
-                    if (redirect_appened)
-                    {
-                        fd = open(outfile, O_WRONLY | O_APPEND | O_CREAT, 0660);
-                        close(STDOUT_FILENO);
-                        dup(fd);
-                        close(fd);
-                    }
-                    if (redirect_err)
-                    {
-                        cout << "im here erorrr" << endl;
-                        fd = creat(error_file, 0660);
-                        close(STDERR_FILENO);
-                        dup(fd);
-                        close(fd);
-                    }
-
-                    /* execute command */
-
-                    if (piping)
-                    {
-                        int curr_pipe = 0;
-                        while (*argvs)
-                        {
-                            pipe(pipefd);
-                            if (fork() == 0)
-                            {
-                                dup2(curr_pipe, 0);
-                                if (*(argvs + 1) != NULL)
-                                {
-                                    dup2(pipefd[1], 1);
-                                }
-                                close(pipefd[0]);
-                                execvp((*argvs)[0], *argvs);
-                                exit(0);
-                            }
-                            else
-                            {
-                                wait(NULL);
-                                close(pipefd[1]);
-                                curr_pipe = pipefd[0];
-                                argvs++;
-                            }
-                        }
-                        exit(0);
-                    }
-                    else
-                    {
-                        execvp(argv[0], argv);
-
-                        /* if execvp returns, it failed */
-                        printf("Error executing command\n");
-                        exit(EXIT_FAILURE);
-                    }
-
+                    fd = creat(outfile, 0660);
+                    close(STDOUT_FILENO);
+                    dup(fd);
+                    close(fd);
+                    /* stdout is now redirect_outed */
                 }
+                if (redirect_appened)
+                {
+                    fd = open(outfile, O_WRONLY | O_APPEND | O_CREAT, 0660);
+                    close(STDOUT_FILENO);
+                    dup(fd);
+                    close(fd);
+                }
+                if (redirect_err)
+                {
+                    cout << "im here erorrr" << endl;
+                    fd = creat(error_file, 0660);
+                    close(STDERR_FILENO);
+                    dup(fd);
+                    close(fd);
+                }
+
+                /* execute command */
+
+                if (piping)
+                {
+                    int curr_pipe = 0;
+                    while (*argvs)
+                    {
+                        pipe(pipefd);
+                        if (fork() == 0)
+                        {
+                            dup2(curr_pipe, 0);
+                            if (*(argvs + 1) != NULL)
+                            {
+                                dup2(pipefd[1], 1);
+                            }
+                            close(pipefd[0]);
+                            execvp((*argvs)[0], *argvs);
+                            exit(0);
+                        }
+                        else
+                        {
+                            wait(NULL);
+                            close(pipefd[1]);
+                            curr_pipe = pipefd[0];
+                            argvs++;
+                        }
+                    }
+                    exit(0);
+                }
+                else
+                {
+                    execvp(argv[0], argv);
+
+                    /* if execvp returns, it failed */
+                    printf("Error executing command\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
 
             /* parent continues here */
 
