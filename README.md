@@ -60,3 +60,14 @@ You can add the else command.
 
 - ***up and down arrows*** - by pressing the up or down arrow in your keyboard it will show you your last 20 commands by order.   
 After pressing any of the arrows you will need to press "enter" in order to see the command.
+
+### Video of the Project
+
+
+https://user-images.githubusercontent.com/93086649/232223354-e02c174d-3962-476e-8f0f-4132b5e82ac4.mp4
+
+
+
+
+
+
