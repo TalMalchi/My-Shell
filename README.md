@@ -20,7 +20,7 @@ In the terminal type `make clean`, and then `make` , to run type `./myshell`
 - ***echo*** - print the given arguments to the standard output
 - ***!!*** - execute the previous command
 - ***$?*** - print the exit status of the last executed command
-- ***prompt***  - change the shell prompt to the given argument
+- ***prompt***  - change the shell prompt to the given argument. you need just to write the new name of the prompt, without : . 
 - ***read***  - read input from the user and store it in a variable. The first line is `read`+ `value`. The second line is seperates with enter and contains tha value of the `key`. Example below : 
 > read name   
 > Tal   
