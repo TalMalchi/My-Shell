@@ -386,24 +386,7 @@ int main()
                 argv[i - 2] = NULL;
                 outfile = argv[i - 1];
             }
-            // else if (argc1 > 1 && !strcmp(argv[i - 2], "2>"))
-            // {
-            //     redirect_out = 0;
-            //     redirect_appened = 0;
-            //     redirect_err = 1;
-            //     argv[argc1 - 2] = NULL;
-            //     error_file = argv[argc1 - 1];
-
-            // }
-            // else if (argc1 > 1 && !strcmp(argv[i - 2], ">>"))
-            // {
-            //     redirect_out = 0;
-            //     redirect_appened = 1;
-            //     redirect_err = 0;
-            //     argv[i - 2] = NULL;
-            //     outfile = argv[argc1 - 1];
-
-            // }
+            
 
             else
             {
