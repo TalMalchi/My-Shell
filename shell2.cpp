@@ -30,6 +30,7 @@ int main()
 {
     signal(SIGINT, handler);
     char command[1024];
+    char temp_command[1024];
     char last_command[1024];
     string command_list[MAXHISTORY];
 
@@ -52,11 +53,32 @@ int main()
             cout << prompt << ": ";
             fgets(command, 1024, stdin);
             command[strlen(command) - 1] = '\0';
+            // copy command into temp_command
+            strcpy(temp_command, command);
             piping = 0;
             redirect_appened = 0;
             redirect_out = 0;
             redirect_err = 0;
             c = command[0];
+            
+             /* parse command line */
+            i = 0;
+            token = strtok(command, " ");
+            while (token != NULL)
+            {
+                argv[i] = token;
+                token = strtok(NULL, " ");
+                i++;
+                if (token && !strcmp(token, "|"))
+                {
+                    piping = 1;
+                    break;
+                }
+            }
+
+            argv[i] = NULL;
+            argc1 = i;
+           
 
             /* !! command */
             if (!strcmp(argv[0], "!!"))
@@ -125,12 +147,14 @@ int main()
             /* IF/ELSE command */
             if (command[0] == 'i' && command[1] == 'f')
             {
+                
                 // take all the command ecxept the first argument
-                strcpy(command, command + 2);
+                strcpy(command, temp_command + 2);
                 string then;
                 getline(cin, then);
                 if (then == "then")
                 {
+
                     string ThenCommand;
                     getline(cin, ThenCommand);
                     string NextCommand;
@@ -140,7 +164,9 @@ int main()
                         if (!system(command))
                         {
                             // check if if statement is true, and execute the command
-                            strcpy(command, ThenCommand.c_str());
+                            strcpy(command, " ");
+                            system(ThenCommand.c_str());                            
+                            
                         }
                         else
                         {
@@ -161,12 +187,18 @@ int main()
                             if (!system(command))
                             {
                                 // cout << "command: inside fi " << endl;
-                                strcpy(command, ThenCommand.c_str());
+                                //strcpy(command, ThenCommand.c_str());
+                                strcpy(command, " ");
+                            system(ThenCommand.c_str());
+
+
                             }
                             else
                             {
                                 // check if if statement is false, and execute the command
-                                strcpy(command, elseCommand.c_str());
+                                //strcpy(command, elseCommand.c_str());
+                                strcpy(command, " ");
+                            system(elseCommand.c_str());
                             }
                         }
                     }
@@ -181,23 +213,23 @@ int main()
             rollingIndex++;
             rollingIndex = rollingIndex % MAXHISTORY;
 
-            /* parse command line */
-            i = 0;
-            token = strtok(command, " ");
-            while (token != NULL)
-            {
-                argv[i] = token;
-                token = strtok(NULL, " ");
-                i++;
-                if (token && !strcmp(token, "|"))
-                {
-                    piping = 1;
-                    break;
-                }
-            }
+            // /* parse command line */
+            // i = 0;
+            // token = strtok(command, " ");
+            // while (token != NULL)
+            // {
+            //     argv[i] = token;
+            //     token = strtok(NULL, " ");
+            //     i++;
+            //     if (token && !strcmp(token, "|"))
+            //     {
+            //         piping = 1;
+            //         break;
+            //     }
+            // }
 
-            argv[i] = NULL;
-            argc1 = i;
+            // argv[i] = NULL;
+            // argc1 = i;
 
             /* Is command empty */
             if (argv[0] == NULL)
@@ -266,6 +298,7 @@ int main()
             /* echo command */
             if (!strcmp(argv[0], "echo"))
             {
+                
                 // check if the argument is empty
                 if (argv[1] == NULL)
                 {
